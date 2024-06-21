@@ -19,40 +19,40 @@ This repository contains the configuration for deploying a Lambda function to no
 ## Setup Instructions
 
 1. **Clone the Repository**:
-    \`\`\`sh
-    git clone https://github.com/your-repo/comet-monitor.git
+    ```sh
+    git clone https://github.com/comet-ml/comet-cisco-lambda.git
     cd comet-monitor
-    \`\`\`
+    ```
 
 2. **Create the Lambda Function ZIP**:
     Ensure \`lambda_function.py\` is updated as needed.
-    \`\`\`sh
+    ```sh
     zip comet_monitor.zip lambda_function.py
-    \`\`\`
+    ```
 
 3. **Create \`terraform.tfvars\`**:
-    Create a \`terraform.tfvars\` file in the root directory with your values. Example:
-    \`\`\`hcl
+    Create a `terraform.tfvars` file in the root directory with your values. Example:
+    ```hcl
     comet_url_override = "http://comet.your-company.net/clientlib/"
     comet_workspace = "your-workspace"
     comet_project = "your-project"
     comet_experiment_key = "your-experiment-key"
     comet_api_key = "your-api-key"
     comet_notification_email = "your@email.com"
-    \`\`\`
+    ```
 
 4. **Update Terraform Configuration**:
-    Ensure the S3 bucket name and paths in \`main.tf\` match your setup.
+    Ensure the S3 bucket name and paths in `main.tf` match your setup.
 
 5. **Initialize Terraform**:
-    \`\`\`sh
+    ```sh
     terraform init
-    \`\`\`
+    ```
 
 6. **Apply the Terraform Configuration**:
-    \`\`\`sh
+    ```sh
     terraform apply -var-file="terraform.tfvars"
-    \`\`\`
+    ```
 
 ## Detailed Configuration
 
@@ -66,15 +66,15 @@ An S3 bucket is created to store the Lambda function code. The ZIP file is uploa
 
 ### Secrets Manager
 
-The Comet API key is stored securely in AWS Secrets Manager. Ensure the secret name \`/comet/cisco/comet_api_key\` is used.
+The Comet API key is stored securely in AWS Secrets Manager. Ensure the secret name `/comet/cisco/comet_api_key` is used.
 
 ### Parameter Store
 
 Other parameters such as workspace, project, and SNS topic ARN are stored in Systems Manager Parameter Store with the following names:
-- \`/comet/cisco/workspace\`
-- \`/comet/cisco/project\`
-- \`/comet/cisco/sns_topic_arn\`
-- \`/comet/cisco/url-override\`
+- `/comet/cisco/workspace`
+- `/comet/cisco/project`
+- `/comet/cisco/sns_topic_arn`
+- `/comet/cisco/url-override`
 
 ### CloudWatch Events
 
