@@ -9,7 +9,7 @@ resource "aws_sns_topic" "comet_monitor_alerts" {
 resource "aws_sns_topic_subscription" "email_subscription" {
   topic_arn = aws_sns_topic.comet_monitor_alerts.arn
   protocol  = "email"
-  endpoint  = "deployment-team@comet.com" # Replace with your email
+  endpoint  = var.comet_notification_email # Replace with your email
 }
 
 resource "aws_ssm_parameter" "comet_url_override" {
@@ -28,6 +28,12 @@ resource "aws_ssm_parameter" "project" {
   name  = "/comet/cisco/project"
   type  = "String"
   value = var.comet_project # Replace with your project
+}
+
+resource "aws_ssm_parameter" "experiment_key" {
+  name  = "/comet/cisco/experiment_key"
+  type  = "String"
+  value = var.comet_experiment_key # Replace with your experiment key
 }
 
 resource "aws_ssm_parameter" "sns_topic_arn" {
@@ -61,7 +67,7 @@ resource "aws_s3_object" "lambda_zip" {
 resource "aws_lambda_function" "comet_monitor" {
   function_name = "CometMonitorLambda"
   handler       = "lambda_function.lambda_handler"
-  runtime       = "python3.8"
+  runtime       = "python3.11"
 
   s3_bucket = "comet-cisco-lambda-bucket"
   s3_key    = "comet_monitor.zip"
@@ -74,6 +80,8 @@ resource "aws_lambda_function" "comet_monitor" {
   }
 
   role = aws_iam_role.lambda_execution_role.arn
+
+  depends_on = [ aws_s3_object.lambda_zip ]
 }
 
 resource "aws_iam_role" "lambda_execution_role" {

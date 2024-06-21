@@ -39,8 +39,8 @@ def lambda_handler(event, context):
     COMET_URL_OVERRIDE = get_parameter('/comet/cisco/comet_url_override')
     WORKSPACE = get_parameter('/comet/cisco/workspace')
     PROJECT = get_parameter('/comet/cisco/project')
+    EXPERIMENT_KEY = get_parameter('/comet/cisco/experiment_key')
     COMET_API_KEY = get_secret('/comet/cisco/comet_api_key')
-    EXPERIMENT_KEY = 'network0000700000000000000000000010'
     THRESHOLD_HIGH = 0.4
     THRESHOLD_LOW = 0.1
     METRIC = 'logMediaBitsPerSec_performance'
