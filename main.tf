@@ -30,12 +30,6 @@ resource "aws_ssm_parameter" "project" {
   value = var.comet_project # Replace with your project
 }
 
-resource "aws_ssm_parameter" "experiment_key" {
-  name  = "/comet/cisco/experiment_key"
-  type  = "String"
-  value = var.comet_experiment_key # Replace with your experiment key
-}
-
 resource "aws_ssm_parameter" "sns_topic_arn" {
   name  = "/comet/cisco/sns_topic_arn"
   type  = "String"
@@ -67,21 +61,24 @@ resource "aws_s3_object" "lambda_zip" {
 resource "aws_lambda_function" "comet_monitor" {
   function_name = "CometMonitorLambda"
   handler       = "lambda_function.lambda_handler"
-  runtime       = "python3.11"
+  runtime       = "python3.12"
 
-  s3_bucket = "comet-cisco-lambda-bucket"
-  s3_key    = "comet_monitor.zip"
+  s3_bucket = aws_s3_bucket.lambda_bucket.bucket
+  s3_key    = aws_s3_object.lambda_zip.key
 
   environment {
     variables = {
-      SSM_PREFIX  = "/comet"
-      SECRET_NAME = "/comet/cisco/comet_api_key"
+      COMET_URL_OVERRIDE = "/comet/cisco/comet_url_override"
+      WORKSPACE          = "/comet/cisco/workspace"
+      PROJECT            = "/comet/cisco/project"
+      SNS_TOPIC_ARN      = "/comet/cisco/sns_topic_arn"
+      SECRET_NAME        = "/comet/cisco/comet_api_key"
     }
   }
 
   role = aws_iam_role.lambda_execution_role.arn
 
-  depends_on = [ aws_s3_object.lambda_zip ]
+  depends_on = [aws_s3_object.lambda_zip]
 }
 
 resource "aws_iam_role" "lambda_execution_role" {
@@ -114,6 +111,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
           "logs:CreateLogStream",
           "logs:PutLogEvents",
           "ssm:GetParameter",
+          "ssm:GetParameters",
           "secretsmanager:GetSecretValue",
           "sns:Publish"
         ]
@@ -124,13 +122,6 @@ resource "aws_iam_role_policy" "lambda_policy" {
           aws_secretsmanager_secret.comet_api_key.arn,
           aws_sns_topic.comet_monitor_alerts.arn
         ]
-      },
-      {
-        Action = [
-          "comet:getExperiment"
-        ]
-        Effect   = "Allow"
-        Resource = "*"
       }
     ]
   })
@@ -139,7 +130,7 @@ resource "aws_iam_role_policy" "lambda_policy" {
 resource "aws_cloudwatch_event_rule" "schedule_rule" {
   name                = "comet_monitor_schedule"
   description         = "Schedule for Comet monitoring"
-  schedule_expression = "cron(0 12 * * ? *)"
+  schedule_expression = "cron(0 * * * ? *)"
 }
 
 resource "aws_cloudwatch_event_target" "lambda_target" {
